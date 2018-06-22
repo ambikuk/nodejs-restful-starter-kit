@@ -1,23 +1,23 @@
-"use strict";
+'use strict';
 
-module.exports = function(sequelize, DataTypes) {
-  var Task = sequelize.define("Task", {
-    title: DataTypes.STRING,
-    user_id: DataTypes.INTEGER,
-  }, {
-    freezeTableName : true,
-    underscored: true,
-    tableName: 'task'
-  });
-  
-  Task.associate = function(models) {
-    Task.belongsTo(models.User, {
-      onDelete: "CASCADE",
-      foreignKey: {
-        allowNull: false
-      }
+module.exports = function (sequelize, DataTypes) {
+    const Task = sequelize.define('Task', {
+        title: DataTypes.STRING,
+        user_id: DataTypes.INTEGER
+    }, {
+        freezeTableName: true,
+        underscored: true,
+        tableName: 'task'
     });
-  }
-  
-  return Task;
+
+    Task.associate = function (models) {
+        Task.belongsTo(models.User, {
+            onDelete: 'CASCADE',
+            foreignKey: {
+                allowNull: false
+            }
+        });
+    };
+
+    return Task;
 };

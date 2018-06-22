@@ -1,74 +1,74 @@
-import bcrypt from 'bcrypt'
-import model from '../models'
-import validator from 'jsonschema/lib/validator'
+import Validator from 'jsonschema/lib/validator';
+import model from '../models';
 
 export default class TaskForm {
-	constructor (params, scenario = 'default') {
+    constructor(params, scenario = 'default') {
         this.params = params;
         this._scenario = scenario;
     }
-    
-    set scenario  (scenario)  { this._scenario = scenario }
 
-	validate() {
-		const params = this.params;
-		return new Promise((resolve, reject) => {
-			const v = new validator();
-			const schema = {
-			    "id": "/Task",
-			    "type": "object",
-			    "properties": {
-			      "title": {"type": "string"},
-			    },
-			    "required": ["title"]
-			};
-			
-			const errors = [];
-			const validate = v.validate(params, schema);	
-		  	if (!validate.valid) {
-			  	for (let i in validate.errors) {
-			  		errors.push(validate.errors[i].stack);
-			  	}
-			}
-			
+    set scenario(scenario) { this._scenario = scenario; }
+
+    validate() {
+        const { params } = this;
+        return new Promise((resolve, reject) => {
+            const v = new Validator();
+            const schema = {
+                id: '/Task',
+                type: 'object',
+                properties: {
+                    title: { type: 'string' }
+                },
+                required: ['title']
+            };
+
+            const errors = [];
+            const validate = v.validate(params, schema);
+            if (!validate.valid) {
+                Object.keys(validate.errors).forEach(i => errors.push(validate.errors[i].stack));
+                reject(errors);
+            }
+            resolve();
+
             if (errors.length > 0) {
                 reject(errors);
-			}
-			
-			resolve();
-		});
-	}
+            }
 
-	save() {
-		const params = this.params;
-		return new Promise((resolve, reject) => {
-			const input = {
-                "title" : params.title,
-                "user_id":  params.user_id
-			}
+            resolve();
+        });
+    }
 
-            model.Task.create(input).then(function(data) {
+    save() {
+        const { params } = this;
+        return new Promise((resolve, reject) => {
+            const input = {
+                title: params.title,
+                user_id: params.user_id
+            };
+
+            model.Task.create(input).then((data) => {
                 resolve(data);
-            }).catch(data => { 
+            }).catch((data) => {
                 reject(data);
-            });            
+            });
         });
-	}
-	
-	update() {
-		const params = this.params;
-		return new Promise((resolve, reject) => {
-			model.Task.update({
-                "title" : params.title,
-			}, {
-				where: {
-					"id" : params.id
-				}
-			}).then(function(data) {
-				(data && data[0] == 1) ? resolve(params) : reject()
-            }).catch(data => { 
+    }
+
+    update() {
+        const { params } = this;
+        return new Promise((resolve, reject) => {
+            model.Task.update({
+                title: params.title
+            }, {
+                where: {
+                    id: params.id
+                }
+            }).then((data) => {
+                if (data && data[0] === 1) resolve(params);
+                reject();
+            }).catch((data) => {
                 reject(data);
-            });            
+            });
         });
-	}
+    }
 }
