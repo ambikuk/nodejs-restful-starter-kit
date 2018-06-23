@@ -1,6 +1,6 @@
-import Validator from 'jsonschema/lib/validator';
-import bcrypt from 'bcrypt';
-import model from '../models';
+import Joi from 'joi';
+import Bcrypt from 'bcrypt';
+import UserRepo from '../repositories/user';
 
 export default class RegisterForm {
     constructor(params) {
@@ -10,67 +10,33 @@ export default class RegisterForm {
 
     validate() {
         const { params } = this;
-        return new Promise((resolve, reject) => {
-            const v = new Validator();
-            const schema = {
-                id: '/Register',
-                type: 'object',
-                properties: {
-                    email: { type: 'string' },
-                    password: { type: 'string' }
-                },
-                required: ['email', 'password']
-            };
-
-            const errors = [];
-            const validate = v.validate(params, schema);
-            if (!validate.valid) {
-                Object.keys(validate.errors).forEach(i => errors.push(validate.errors[i].stack));
-                reject(errors);
-            }
-            resolve();
+        const schema = Joi.object().keys({
+            email: Joi.string().required().max(50),
+            password: Joi.string().required().max(50),
+            password_repeat: Joi.string().required().max(50)
         });
+
+        const validate = Joi.validate(params, schema);
+        if (validate.error !== null) {
+            throw Error(validate.error.details[0].message.replace(/"/g, ''));
+        }
     }
 
-    register() {
+    async register() {
         const { params } = this;
-        const self = this;
-        return new Promise((resolve, reject) => {
-            bcrypt.hash(params.password, 10, (err, hash) => {
-                const now = Math.round(+new Date() / 1000);
-                const input = {
-                    email: params.email,
-                    password_hash: hash,
-                    created_at: now,
-                    updated_at: now
-                };
+        const hash = await Bcrypt.hash(params.password, 10);
+        const now = Math.round(+new Date() / 1000);
+        const input = {
+            email: params.email,
+            password_hash: hash,
+            created_at: now,
+            updated_at: now
+        };
 
-                self.checkExistingUser(params.email).then((data) => {
-                    model.User.create(input).then((res) => {
-                        resolve(res);
-                    }).catch((res) => {
-                        reject(res);
-                    });
-                }).catch((data) => {
-                    reject(data);
-                });
-            });
-        });
-    }
-
-    static checkExistingUser(email) {
-        return new Promise((resolve, reject) => {
-            model.User.findAll({
-                where: {
-                    email
-                }
-            }).then((data) => {
-                if (data.length === 0) {
-                    resolve(true);
-                } else {
-                    reject(new Error('email already exist!'));
-                }
-            });
-        });
+        const data = await UserRepo.findByEmail(params.email);
+        if (data) {
+            throw Error('Email has been registered');
+        }
+        return UserRepo.create(input);
     }
 }

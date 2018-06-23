@@ -5,8 +5,8 @@ import RegisterForm from '../forms/RegisterForm';
 
 module.exports = class Auth {
     static async login(req, res) {
-        const form = new LoginForm(req.body);
         try {
+            const form = new LoginForm(req.body);
             const data = await form.login();
             return new Response(res, data);
         } catch (err) {
@@ -15,13 +15,12 @@ module.exports = class Auth {
     }
 
     static async register(req, res) {
-        const form = new RegisterForm(req.body);
         try {
-            await form.validate();
+            const form = new RegisterForm(req.body);
             const register = await form.register();
             return new Response(res, register);
         } catch (err) {
-            return new ErrorException(res, err, 404);
+            return new ErrorException(res, err.message, 404);
         }
     }
 };

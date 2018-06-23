@@ -1,31 +1,35 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import model from '../models';
+import Bcrypt from 'bcrypt';
+import Jwt from 'jsonwebtoken';
+import Joi from 'joi';
+import UserRepo from '../repositories/user';
 
 export default class LoginFrom {
     constructor(params) {
         this.params = params;
+        this.validate();
     }
 
-    login() {
+    validate() {
         const { params } = this;
-        return new Promise((resolve, reject) => {
-            model.User.findOne({
-                where: {
-                    email: params.email
-                }
-            }).then((data) => {
-                let hash = data.password_hash;
-                hash = hash.replace(/^\$2y(.+)$/i, '$2a$1'); // Support YII2 encryption
-                bcrypt.compare(params.password, hash, (err, res) => {
-                    if (res) {
-                        const login = { token: jwt.sign({ email: data.email, _id: data.id }, 'RESTFULAPIs', { expiresIn: '1d' }) };
-                        resolve(login);
-                    } else {
-                        reject(new Error('Password Incorrect'));
-                    }
-                });
-            });
+        const schema = Joi.object().keys({
+            email: Joi.string().required().max(50),
+            password: Joi.string().required().max(50)
         });
+
+        const validate = Joi.validate(params, schema);
+        if (validate.error !== null) {
+            throw Error(validate.error.details[0].message.replace(/"/g, ''));
+        }
+    }
+
+    async login() {
+        const { params } = this;
+        const data = await UserRepo.findByEmail(params.email);
+        const hash = data.password_hash.replace(/^\$2y(.+)$/i, '$2a$1'); // Support YII2 encryption
+        const result = await Bcrypt.compare(params.password, hash);
+        if (!result) {
+            throw Error('Incorrect Password');
+        }
+        return { token: Jwt.sign({ email: data.email, _id: data.id }, 'RESTFULAPIs', { expiresIn: '1d' }) };
     }
 }

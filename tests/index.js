@@ -1,7 +1,3 @@
-import db from '../models';
-import AuthenticationTest from './forms/AuthenticationTest';
-import TaskTest from './forms/TaskTest';
+import Base from './helpers/BaseTest';
 
-new AuthenticationTest().execute();
-new TaskTest().execute();
-
+Base.execute();
