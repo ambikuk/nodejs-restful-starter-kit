@@ -1,7 +1,10 @@
 
 import test from 'ava';
 import db from '../../models';
-import AuthenticationTest from '../forms/AuthenticationTest';
+import LoginFormTest from '../forms/LoginFormTest';
+import RegisterFormTest from '../forms/RegisterFormTest';
+import TaskFormTest from '../forms/TaskFormTest';
+import TaskRepoTest from '../repositories/taskTest';
 
 export default class BaseTest {
     static async init() {
@@ -14,6 +17,7 @@ export default class BaseTest {
                 truncate: true
             });
             const user = {
+                id: 1,
                 email: 'buhoridermawan@gmail.com',
                 password_hash: '$2y$13$AJ/ZeQNaNEfxB5rdIrZL/OzFUkfF2HvIA8jWUQpjng/iec6dhV0L2',
                 created_at: '2017-11-14 05:07:14',
@@ -22,18 +26,28 @@ export default class BaseTest {
             };
             const userRow = await db.User.create(user);
 
-            const task = {
+            await db.Task.create({
+                id: 1,
                 title: 'Title',
                 created_at: '2017-11-14 05:07:14',
                 updated_at: '2017-11-14 05:07:14',
                 user_id: userRow.id
-            };
-            await db.Task.create(task);
+            });
+            await db.Task.create({
+                id: 2,
+                title: 'Title 2',
+                created_at: '2017-11-14 05:07:14',
+                updated_at: '2017-11-14 05:07:14',
+                user_id: userRow.id
+            });
         });
     }
 
     static async execute() {
         await this.init();
-        await AuthenticationTest.execute();
+        await LoginFormTest.execute();
+        await RegisterFormTest.execute();
+        await TaskFormTest.execute();
+        await TaskRepoTest.execute();
     }
 }

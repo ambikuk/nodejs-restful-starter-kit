@@ -1,9 +1,10 @@
+import BaseController from './BaseController';
 import ErrorException from '../components/ErrorException';
 import Response from '../components/Response';
 import LoginForm from '../forms/LoginForm';
 import RegisterForm from '../forms/RegisterForm';
 
-module.exports = class Auth {
+module.exports = class Auth extends BaseController {
     static async login(req, res) {
         try {
             const form = new LoginForm(req.body);

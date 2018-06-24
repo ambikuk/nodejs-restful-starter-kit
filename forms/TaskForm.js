@@ -1,74 +1,51 @@
-import Validator from 'jsonschema/lib/validator';
-import model from '../models';
+import Joi from 'joi';
+import TaskRepo from '../repositories/task';
 
+const CREATE = 'create';
 export default class TaskForm {
     constructor(params, scenario = 'default') {
         this.params = params;
-        this._scenario = scenario;
+        this.scenario = scenario;
+        this.validate();
     }
-
-    set scenario(scenario) { this._scenario = scenario; }
 
     validate() {
-        const { params } = this;
-        return new Promise((resolve, reject) => {
-            const v = new Validator();
-            const schema = {
-                id: '/Task',
-                type: 'object',
-                properties: {
-                    title: { type: 'string' }
-                },
-                required: ['title']
-            };
+        const { params, scenario } = this;
+        const field = {
+            title: Joi.string().required().max(50)
+        };
+        if (scenario === CREATE) {
+            field.user_id = Joi.number().required().max(50);
+        }
+        const schema = Joi.object().keys(field);
 
-            const errors = [];
-            const validate = v.validate(params, schema);
-            if (!validate.valid) {
-                Object.keys(validate.errors).forEach(i => errors.push(validate.errors[i].stack));
-                reject(errors);
-            }
-            resolve();
-
-            if (errors.length > 0) {
-                reject(errors);
-            }
-
-            resolve();
-        });
+        const validate = Joi.validate(params, schema);
+        if (validate.error !== null) {
+            throw Error(validate.error.details[0].message.replace(/"/g, ''));
+        }
     }
 
-    save() {
+    async create() {
         const { params } = this;
-        return new Promise((resolve, reject) => {
-            const input = {
-                title: params.title,
-                user_id: params.user_id
-            };
+        const now = Math.round(+new Date() / 1000);
+        const input = {
+            title: params.title,
+            user_id: params.user_id,
+            created_at: now,
+            updated_at: now
+        };
 
-            model.Task.create(input).then((data) => {
-                resolve(data);
-            }).catch((data) => {
-                reject(data);
-            });
-        });
+        return TaskRepo.create(input);
     }
 
-    update() {
+    async update(id) {
         const { params } = this;
-        return new Promise((resolve, reject) => {
-            model.Task.update({
-                title: params.title
-            }, {
-                where: {
-                    id: params.id
-                }
-            }).then((data) => {
-                if (data && data[0] === 1) resolve(params);
-                reject();
-            }).catch((data) => {
-                reject(data);
-            });
-        });
+        const now = Math.round(+new Date() / 1000);
+        const input = {
+            title: params.title,
+            updated_at: now
+        };
+
+        return TaskRepo.update(id, input);
     }
 }

@@ -30,6 +30,6 @@ export default class LoginFrom {
         if (!result) {
             throw Error('Incorrect Password');
         }
-        return { token: Jwt.sign({ email: data.email, _id: data.id }, 'RESTFULAPIs', { expiresIn: '1d' }) };
+        return { token: Jwt.sign({ email: data.email, id: data.id }, 'RESTFULAPIs', { expiresIn: '1d' }) };
     }
 }
