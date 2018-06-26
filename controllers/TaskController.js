@@ -1,10 +1,9 @@
-import BaseController from './BaseController';
 import ErrorException from '../components/ErrorException';
 import Response from '../components/Response';
 import TaskRepo from '../repositories/task';
 import TaskForm from '../forms/TaskForm';
 
-module.exports = class TaskController extends BaseController {
+module.exports = class TaskController {
     static async create(req, res) {
         try {
             req.body.user_id = req.user.id;
