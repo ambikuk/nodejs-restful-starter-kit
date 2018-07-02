@@ -20,9 +20,6 @@ export default class RegisterForm {
         if (validate.error !== null) {
             throw Error(validate.error.details[0].message.replace(/"/g, ''));
         }
-        if (params.password !== params.password_repeat) {
-            throw Error("Password Confirmation didn't match!");
-        }
     }
 
     async register() {
